@@ -1,4 +1,4 @@
-from flask import Blueprint, Flask, jsonify, request
+from flask import Blueprint, Flask, jsonify, request , render_template
 from app.models import User, db, Category , Product , Order , OrderItem
 from app.schemas import CategorySchema , ProductSchema
 from marshmallow import ValidationError
@@ -154,8 +154,16 @@ def login():
             }), 200
     return jsonify({'message': 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง'}), 401   
 
+
+@api.route('/login' , methods=['GET'])
+def login_page():
+    return render_template('login.html')
+
+
+
 @api.route('/logout', methods=['GET'])
 @login_required 
 def logout():
     logout_user() # ลบ Session ของ User
     return jsonify({'message': 'ออกจากระบบสำเร็จ'}), 200
+
