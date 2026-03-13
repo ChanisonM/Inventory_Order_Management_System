@@ -17,26 +17,26 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
         if (response.ok) {
             Swal.fire({
                 icon: "success",
-                title: "เข้าสู่ระบบสำเร็จ",
-                text: `ยินดีต้อนรับคุณ ${data.user.username}`,
+                title: "Login Success",
+                text: `Welcome ${data.user.username}`,
                 timer: 1500,
                 showConfirmButton: false,
             }).then(() => {
-                window.location.href = "/dashboard"; // ย้ายไปหน้า Dashboard
+                window.location.href = "/api/dashboard"; // ย้ายไปหน้า Dashboard
             });
         } else {
             Swal.fire({
                 icon: "error",
-                title: "เข้าสู่ระบบไม่สำเร็จ",
-                text: data.message || "ชื่อผู้ใช้หรือรหัสผ่านผิด",
+                title: "Login failed",
+                text: data.message || "Incorrect username or password.",
             });
         }
     } catch (error) {
         console.log("Error", error);
         Swal.fire({
             icon: "error",
-            title: "เกิดข้อผิดพลาด",
-            text: "ไม่สามารถติดต่อเซิร์ฟเวอร์ได้",
+            title: "An error occurred.",
+            text: "Unable to contact server",
         });
     }
 });

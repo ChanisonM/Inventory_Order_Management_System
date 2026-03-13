@@ -1,8 +1,10 @@
-from flask import Blueprint, Flask, jsonify, request , render_template
+from flask import Blueprint, Flask, jsonify, request , render_template , redirect , url_for , make_response
 from app.models import User, db, Category , Product , Order , OrderItem
 from app.schemas import CategorySchema , ProductSchema
 from marshmallow import ValidationError
-from flask_login import login_user, logout_user, login_required, current_user 
+from flask_login import login_user, logout_user, login_required, current_user
+
+import time # เพิ่มไว้บนสุดของไฟล์
 
 # สร้าง Blueprint เพื่อแยกส่วน Route ออกมา
 api = Blueprint('api', __name__)
@@ -31,7 +33,7 @@ def create_category():
 
     return jsonify({'message': 'เพิ่มหมวดหมู่สำเร็จ', 'category': schema.dump(new_category)}), 201
 
-@api.route('/categories', methods=['POST'])
+@api.route('/categories', methods=['GET'])
 def get_categories():
     categories = Category.query.all()
     schema = CategorySchema(many=True)
@@ -40,12 +42,12 @@ def get_categories():
 
 @api.route('/products', methods=['POST'])
 def add_product():
-    jsoin_data = request.get_json()
+    json_data = request.get_json()
     schema = ProductSchema()
 
     try:    
         # 1. Validation (เช็ก SKU, ราคา, สต็อก)
-        data = schema.load(jsoin_data)
+        data = schema.load(json_data)
     except ValidationError as err:
         return jsonify({'error': err.messages}), 400
     
@@ -74,6 +76,28 @@ def get_products():
     products = Product.query.all()
     schema = ProductSchema(many=True)
     return jsonify({'products': schema.dump(products)}), 200
+
+
+@api.route('/add_product' , methods=['POST'])
+@login_required
+def add_product_from_modal():
+    data = request.json
+    try :
+        # สร้าง SKU แบบไม่ซ้ำโดยใช้เวลาปัจจุบันพ่วงท้าย
+        unique_sku = f"PROD-{int(time.time())}"
+
+        new_product = Product(
+            name = data['name'] ,
+            stock_quantity = data['stock_quantity'],
+            price = data['price'],
+            sku = unique_sku ,
+            category_id=data.get('category_id', 1) # สมมติว่ามีหมวดหมู่ที่ 1 อยู่แล้ว
+        )
+        db.session.add(new_product)
+        db.session.commit()
+        return jsonify({"message" : "Add Product Success !!"}) , 201
+    except Exception as e :
+        return jsonify({"message" : f"Someting Wrong {str(e)}"}) , 400
 
 @api.route('/orders', methods=['POST'])
 @login_required
@@ -138,6 +162,9 @@ def register():
     db.session.commit()
     return jsonify({'message': 'สมัครสมาชิกสำเร็จ'}), 201
 
+
+
+
 @api.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
@@ -152,7 +179,7 @@ def login():
                 "role" : user.role
             }
             }), 200
-    return jsonify({'message': 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง'}), 401   
+    return jsonify({'message': 'Incorrect username or password.'}), 401   
 
 
 @api.route('/login' , methods=['GET'])
@@ -160,10 +187,20 @@ def login_page():
     return render_template('login.html')
 
 
-
 @api.route('/logout', methods=['GET'])
 @login_required 
 def logout():
     logout_user() # ลบ Session ของ User
-    return jsonify({'message': 'ออกจากระบบสำเร็จ'}), 200
+    # jsonify({'message': 'ออกจากระบบสำเร็จ'}), 200
+    return redirect(url_for('api.login'))
 
+
+@api.route('/dashboard')
+@login_required
+def dashboard():
+    response = make_response(render_template('dashboard.html', user=current_user))
+    # สั่ง Browser ว่าห้ามเก็บ Cache หน้านี้เด็ดขาด
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    return response

@@ -18,6 +18,7 @@ def create_app():
     # 5. เชื่อมต่อ LoginManager เข้ากับแอป
     login_manager.init_app(app)
     login_manager.login_view = 'api.login'  # ถ้าไม่ล็อกอินจะถูกส่งไปที่หน้าไหน
+    login_manager.login_message = "กรุณาเข้าสู่ระบบก่อนใช้งาน"
 
     # 6. เพิ่มฟังก์ชันโหลด User (ตัวนี้คือสิ่งที่ Error ถามหาครับ)
     @login_manager.user_loader
