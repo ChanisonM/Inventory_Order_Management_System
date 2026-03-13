@@ -47,7 +47,15 @@ document.getElementById('productForm').onsubmit = async (e) => {
     });
 
     if (response.ok) {
-        alert('บันทึกสำเร็จ!');
+       Swal.fire({
+                icon: "success",
+                title: "Success",
+                text: `Save Data Success`,
+                timer: 1500,
+                showConfirmButton: false,
+            })
+
+      //   alert('บันทึกสำเร็จ!');
         document.getElementById('productForm').reset()
         toggleModal(); // ปิด Modal
         loadProducts(); // โหลดตารางใหม่ทันทีไม่ต้อง Refresh หน้า
