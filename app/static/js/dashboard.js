@@ -1,6 +1,6 @@
-function toggleModal(){
-   const modal = document.getElementById('productModal')
-   modal.classList.toggle('hidden')
+function toggleModal() {
+    const modal = document.getElementById('productModal')
+    modal.classList.toggle('hidden')
 }
 
 // 1. ฟังก์ชันดึงข้อมูลสินค้าทั้งหมดมาโชว์ในตาราง
@@ -8,7 +8,7 @@ async function loadProducts() {
     const response = await fetch('/api/products'); // อิงจาก @api.route('/api/products', methods=['GET'])
     const data = await response.json();
     const tableBody = document.getElementById('product-table-body');
-    
+
     if (data.products && data.products.length > 0) {
         tableBody.innerHTML = '';
         data.products.forEach(p => {
@@ -37,8 +37,8 @@ document.getElementById('productForm').onsubmit = async (e) => {
         price: document.getElementById('p_price').value
     };
 
-    console.log(productData);
-    
+    // console.log(productData);
+
 
     const response = await fetch('/api/add_product', {
         method: 'POST',
@@ -47,15 +47,15 @@ document.getElementById('productForm').onsubmit = async (e) => {
     });
 
     if (response.ok) {
-       Swal.fire({
-                icon: "success",
-                title: "Success",
-                text: `Save Data Success`,
-                timer: 1500,
-                showConfirmButton: false,
-            })
+        Swal.fire({
+            icon: "success",
+            title: "Success",
+            text: `Save Data Success`,
+            timer: 1500,
+            showConfirmButton: false,
+        })
 
-      //   alert('บันทึกสำเร็จ!');
+        //   alert('บันทึกสำเร็จ!');
         document.getElementById('productForm').reset()
         toggleModal(); // ปิด Modal
         loadProducts(); // โหลดตารางใหม่ทันทีไม่ต้อง Refresh หน้า
@@ -66,3 +66,4 @@ document.getElementById('productForm').onsubmit = async (e) => {
 
 // เรียกโหลดข้อมูลครั้งแรกเมื่อเปิดหน้า
 loadProducts();
+

@@ -204,3 +204,50 @@ def dashboard():
     response.headers['Pragma'] = 'no-cache'
     response.headers['Expires'] = '0'
     return response
+
+
+@api.route('/add_staff' , methods=["POST"])
+@login_required
+def add_staff():
+    # 1. เช็กก่อนว่าคนกดคือ Admin หรือไม่
+    if current_user.role != "admin":
+        return jsonify({'message' : 'สิทธิ์ไม่เพียงพอ เฉพาะ Admin เท่านั้น'}), 403
+    
+    data = request.get_json()
+
+    # 2. ตรวจสอบว่าชื่อผู้ใช้ซ้ำไหม
+    if User.query.filter_by(username = data['username']).first():
+        return jsonify({'message' : 'ชื่อผู้ใช้นี้มีอยู่ในระบบแล้ว'}) , 400
+    
+    # 3. บันทึกพนักงานใหม่
+    new_user = User(username=data['username'] , role='staff')
+    new_user.set_password(data['password'])
+    db.session.add(new_user)
+    db.session.commit()
+    return jsonify({'message': f"เพิ่มพนักงาน {data['username']} เรียบร้อยแล้ว"}), 201
+
+
+@api.route('/manage_staff')
+@login_required
+def manage_staff():
+    if current_user.role != 'admin':
+        return redirect(url_for('api.dashboard'))
+    return render_template('manage_staff.html' , user=current_user)
+
+# API สำหรับดึงข้อมูลพนักงาน (JSON)
+@api.route('/api/get_staffs')
+@login_required
+def get_staff():
+    if current_user.role != 'admin':
+        return jsonify({'message': 'Unauthorized'}), 403
+    # ดึงทุกคนยกเว้นตัวเราเอง
+    # staffs = User.query.filter(User.id != current_user.id).all()
+    staffs = User.query.all()
+    staff_list = []
+    for s in staffs :
+        staff_list.append({
+            'id' : s.id ,
+            'username' : s.username ,
+            'role' : s.role
+        })
+    return jsonify({'staffs' : staff_list})

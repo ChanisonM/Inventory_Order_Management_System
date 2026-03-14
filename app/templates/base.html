@@ -1,41 +1,76 @@
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Magic Tales Inventory{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     {% block head %}{% endblock %}
 </head>
+
 <body class="bg-gray-100 font-sans">
 
     {% if current_user.is_authenticated %}
-    <nav class="bg-white shadow-md p-4 flex justify-between items-center sticky top-0 z-10">
-        <div class="flex items-center gap-2 cursor-pointer" onclick="window.location.href='/api/dashboard'">
-            <i class="fa-solid fa-dragon text-blue-600 text-2xl"></i>
-            <h1 class="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Magic Tales Inventory
-            </h1>
-        </div>
-        <div class="flex items-center gap-4">
-            <span class="text-gray-700 font-medium">Hello , {{ current_user.username }}</span>
-            <a href="{{ url_for('api.logout') }}" class="text-red-500 hover:text-red-700 transition flex items-center gap-2">
-                <i class="fa-solid fa-right-from-bracket"></i> Logout
-            </a>
-        </div>
-    </nav>
-    {% endif %}
+    <div class="flex min-h-screen">
+        <aside class="w-64 bg-slate-800 text-white flex-shrink-0 flex flex-col shadow-xl sticky top-0 h-screen">
+            <div class="p-6 flex items-center gap-2 border-b border-slate-700">
+                <svg class="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>
+                <span class="text-lg font-bold tracking-wider" >MAGIC TALES</span>
+            </div>
 
-    <div class="container mx-auto">
-        {% block content %}{% endblock %}
+            <nav class="mt-6 flex-1">
+                <a href="#" onclick="window.location.href='/api/dashboard'"
+                    class="flex items-center gap-3 py-3 px-6 hover:bg-slate-700 transition-colors">
+                    <i class="fa-solid fa-boxes-stacked w-5"></i>
+                    <span>Inventory</span>
+                </a>
+
+                {% if current_user.role == 'admin' %}
+                
+                <a href="{{ url_for('api.manage_staff') }}"
+                    class="flex items-center gap-3 py-3 px-6 hover:bg-slate-700 transition-colors">
+                    <i class="fa-solid fa-users-gear w-5"></i>
+                    <span>Manage Staff</span>
+                </a>
+
+                
+                {% endif %}
+            </nav>
+
+            <div class="p-4 border-t border-slate-700 bg-slate-900">
+                <div class="text-sm text-slate-400 mb-2">Logged in as:</div>
+                <div class="font-medium text-blue-300 truncate mb-4">{{ current_user.username }} ({{current_user.role}})
+                </div>
+                <a href="{{ url_for('api.logout') }}"
+                    class="flex items-center gap-2 text-red-400 hover:text-red-300 transition-colors font-semibold">
+                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                </a>
+            </div>
+        </aside>
+
+        <main class="flex-1 overflow-y-auto">
+            <div class="p-8">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
     </div>
 
+    {% else %}
+    <div class="min-h-screen flex items-center justify-center">
+        {% block login_content %}{% endblock %}
+    </div>
+    {% endif %}
+
     {% block scripts %}
-    <script src="../static/js/dashboard.js"></script>
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
     {% endblock %}
 </body>
+
 </html>

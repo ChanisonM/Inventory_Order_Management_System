@@ -1,19 +1,27 @@
-{% extends "base.html" %} {% block title %} Deshboard - Store Management {%
-endblock %} {% block content %}
+{% extends "base.html" %} {% block title %} Deshboard - Store Management
+{% endblock %} 
+{% block content %}
+
+
 <main class="p-6 max-w-7xl mx-auto">
   <div class="flex justify-between items-center mb-8 mt-4">
-    <h2 class="text-2xl font-blod text-gray-800">Store Management</h2>
-    <button
-      onclick="toggleModal()"
-      class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg flex items-center gap-2 transition-all shadow-lg hove:scale-105"
-    >
+    <h2 class="text-2xl font-blod text-gray-800">Inventory</h2>
+
+    <!-- {% if user.role == 'admin'%}
+    <button onclick="toggleUserModal()"
+      class="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-lg flex items-center gap-2 transition-all shadow-lg hove:scale-105">
+      <i class="fa-solid fa-user-plus"> Add Staff</i>
+    </button>
+    {% endif%} -->
+
+
+    <button onclick="toggleModal()"
+      class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg flex items-center gap-2 transition-all shadow-lg hove:scale-105">
       <i class="fa-solid fa-plus"> Add Product</i>
     </button>
   </div>
 
-  <div
-    class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
-  >
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
     <table class="w-full text-left border-collapse">
       <thead class="bg-gray-50 text-gray-600 uppercase text-xs font-semibold">
         <tr>
@@ -35,70 +43,83 @@ endblock %} {% block content %}
   </div>
 </main>
 
-<div
-  id="productModal"
-  class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 p-4"
->
+<div id="productModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 p-4">
   <div class="bg-white rounded-2xl w-full max-w-md p-8 shadow-2xl">
     <div class="flex justify-between items-center mb-6">
+
       <h3 class="text-xl font-blod text-gray-800">New Product</h3>
-      <button
-        onclick="toggleModal()"
-        class="text-gray-400 hover:text-gray-600 text-2xl"
-      >
+      <button onclick="toggleModal()" class="text-gray-400 hover:text-gray-600 text-2xl">
         &times;
       </button>
     </div>
 
     <form id="productForm" class="space-y-4">
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1"
-          >Product Name</label
-        >
-        <input
-          type="text"
-          id="p_name"
-          placeholder="Name Product"
-          required
-          class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
-        />
+        <label class="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
+        <input type="text" id="p_name" placeholder="Name Product" required
+          class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none" />
       </div>
 
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1"
-            >Quantity</label
-          >
-          <input
-            type="number"
-            id="p_qty"
-            placeholder="0"
-            required
-            class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
-          />
+          <label class="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+          <input type="number" id="p_qty" placeholder="0" required
+            class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none" />
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1"
-            >Price (฿)</label
-          >
-          <input
-            type="number"
-            step="0.01"
-            id="p_price"
-            placeholder="0.00"
-            required
-            class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
-          />
+          <label class="block text-sm font-medium text-gray-700 mb-1">Price (฿)</label>
+          <input type="number" step="0.01" id="p_price" placeholder="0.00" required
+            class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none" />
         </div>
       </div>
 
-      <button
-        type="submit"
-        class="w-full bg-blue-600 hover:bg-blue-800 text-white py-2.5 rounded-lg font-bold transition-colors mt-4"
-      >
+      <button type="submit"
+        class="w-full bg-blue-600 hover:bg-blue-800 text-white py-2.5 rounded-lg font-bold transition-colors mt-4">
         Save Product
       </button>
     </form>
+
+
+
+
+
   </div>
 </div>
+
+
+
+<div id="userModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+  <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md transform transition-all">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-2xl font-bold text-gray-800">Add New Staff</h2>
+      <button onclick="toggleUserModal()" class="text-gray-400 hover:text-gray-600">
+        <i class="fa-solid fa-xmark text-xl"></i>
+      </button>
+    </div>
+
+    <form id="userForm" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+        <input type="text" id="new_username" required
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition">
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+        <input type="password" id="new_password" required
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition">
+      </div>
+
+      <div class="pt-4">
+        <button type="submit"
+          class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg shadow-lg transform active:scale-95 transition">
+          Create Account
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+
 {% endblock %}

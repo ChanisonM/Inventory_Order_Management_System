@@ -1,83 +1,51 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login - Magic Tales Inventory</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-  </head>
-  <body class="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-    <div class="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
-      <div class="text-center mb-8">
-        <div class="flex justify-center items-center mb-2">
-          <svg
-            class="w-10 h-10 text-blue-600"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M13 10V3L4 14h7v7l9-11h-7z"
-            ></path>
-          </svg>
-          <span class="text-2xl font-bold text-gray-800 ml-2"
-            >Magic Tales Inventory</span
-          >
-        </div>
-        <h2
-          class="text-lg font-semibold text-gray-500 uppercase tracking-widest"
-        >
-          Welcom Back!
-        </h2>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login - Magic Tales Inventory</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<body class="min-h-screen flex items-center justify-center bg-gray-100 px-4">
+  <div class="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
+    <div class="text-center mb-8">
+      <div class="flex justify-center items-center mb-2">
+        <svg class="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+        </svg>
+        <span class="text-2xl font-bold text-gray-800 ml-2">Magic Tales Inventory</span>
       </div>
-
-      <form action="#" class="space-y-6" id="loginForm">
-        <div>
-          <input
-            type="text"
-            name="username"
-            id="username"
-            required
-            placeholder="Username"
-            class="w-full px-4 py-3 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-          />
-        </div>
-
-        <div>
-          <input
-            type="password"
-            name="password"
-            id="password"
-            required
-            placeholder="************"
-            class="w-full px-4 py-3 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-          />
-        </div>
-
-        <button
-          type="submit"
-          class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-md hover:shadow-lg transition duration-200"
-        >
-          LOGIN
-        </button>
-
-        <div class="mt-8 flex justify-between items-center text-sm">
-          <a href="#" class="text-blue-600 hover:underline font-medium"
-            >Don't have an account?</a
-          >
-          <a href="#" class="text-gray-400 hover:text-gray-600"
-            >Forgot Password?</a
-          >
-        </div>
-      </form>
+      <h2 class="text-lg font-semibold text-gray-500 uppercase tracking-widest">
+        Welcom Back!
+      </h2>
     </div>
 
-    <script src="../static/js/login.js"> </script>
+    <form action="#" class="space-y-6" id="loginForm">
+      <div>
+        <input type="text" name="username" id="username" required placeholder="Username"
+          class="w-full px-4 py-3 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition" />
+      </div>
 
-  </body>
+      <div>
+        <input type="password" name="password" id="password" required placeholder="************"
+          class="w-full px-4 py-3 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition" />
+      </div>
+
+      <button type="submit"
+        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-md hover:shadow-lg transition duration-200">
+        LOGIN
+      </button>
+
+      <div class="mt-8 flex items-center justify-center text-sm">
+        <a href="#" class="text-gray-400 hover:text-gray-600">Forgot Password?</a>
+      </div>
+    </form>
+  </div>
+
+  <script src="../static/js/login.js"></script>
+</body>
+
 </html>
