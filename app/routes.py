@@ -251,3 +251,50 @@ def get_staff():
             'role' : s.role
         })
     return jsonify({'staffs' : staff_list})
+
+@api.route('api/update_staff/<int:user_id>' , methods=["PUT"])
+@login_required
+def update_staff(user_id):
+    if current_user.role != 'admin':
+        return jsonify({'message': 'สิทธิ์ไม่เพียงพอ เฉพาะ Admin เท่านั้น'}), 403
+    
+    data = request.get_json()
+    user = User.query.get_or_404(user_id)
+    
+    # 2. ตรวจสอบการเปลี่ยน Username (แยกออกมา)
+    new_username = data.get('username')
+    if new_username and new_username != user.username:
+        existing_user = User.query.filter(User.username == new_username , User.id != user_id).first()
+        if existing_user:
+            return jsonify({'message': f'ชื่อผู้ใช้ "{new_username}" มีอยู่ในระบบแล้ว'}), 400
+        user.username = new_username
+
+    # 3. ตรวจสอบการเปลี่ยน Password (ย้ายออกมานอกเงื่อนไขชื่อ เพื่อให้เปลี่ยนรหัสอย่างเดียวได้)
+    new_password = data.get('password')
+    if new_password:
+        user.set_password(new_password)
+    
+    # 4. สั่ง Commit ตรงนี้ (เพื่อให้ครอบคลุมทั้งการเปลี่ยนชื่อ และ/หรือ เปลี่ยนรหัส)
+    try:
+        db.session.commit()
+        return jsonify({'message': f'อัปเดตข้อมูลของ {user.username} สำเร็จ'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': 'เกิดข้อผิดพลาดในการบันทึกข้อมูล', 'error': str(e)}), 500
+    
+@api.route('/api/delete_staff/<int:user_id>' , methods=['DELETE'])
+@login_required
+def delete_staff(user_id):
+    if current_user.role != 'admin' :
+        return jsonify({'message': 'สิทธิ์ไม่เพียงพอ'}), 403
+    # ห้ามลบตัวเอง
+    if current_user.id == user_id :
+        return jsonify({'message': 'คุณไม่สามารถลบบัญชีของตัวเองได้'}), 400
+    user = User.query.get_or_404(user_id)
+    try :
+        db.session.delete(user)
+        db.session.commit()
+        return jsonify({'message': f'ลบพนักงาน {user.username} เรียบร้อยแล้ว'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': 'เกิดข้อผิดพลาดในการลบข้อมูล', 'error': str(e)}), 500
