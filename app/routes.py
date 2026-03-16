@@ -242,7 +242,7 @@ def get_staff():
         return jsonify({'message': 'Unauthorized'}), 403
     # ดึงทุกคนยกเว้นตัวเราเอง
     # staffs = User.query.filter(User.id != current_user.id).all()
-    staffs = User.query.all()
+    staffs = User.query.order_by(User.role.asc() , User.username.asc()).all()
     staff_list = []
     for s in staffs :
         staff_list.append({
