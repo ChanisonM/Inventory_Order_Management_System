@@ -67,12 +67,6 @@ async function loadStaffs() {
         // ฟังก์ชันนี้จะจัดการ tableBody.innerHTML ให้เองครับ
         displayTable(1);
 
-        /* ❌ ลบโค้ดส่วนนี้ออกให้หมดครับ ❌
-        const tableBody = document.getElementById('staff-table-body');
-        tableBody.innerHTML = ''; 
-        if (data.staffs.length === 0) { ... }
-        data.staffs.forEach(s => { ... }); 
-        */
 
     } catch (error) {
         console.error('Error:', error);
