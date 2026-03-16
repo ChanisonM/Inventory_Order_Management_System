@@ -260,6 +260,14 @@ def update_staff(user_id):
     
     data = request.get_json()
     user = User.query.get_or_404(user_id)
+
+    # แก้ไข Role (เพิ่มส่วนนี้เข้าไปครับ)
+    new_role = data.get('role')
+    if new_role:
+        # ป้องกันไม่ให้ Admin เผลอเปลี่ยน Role ตัวเองเป็น staff (ไม่งั้นจะเข้าหน้านี้ไม่ได้อีก)
+        if user.id == current_user.id and new_role == 'staff':
+            return jsonify({'message': 'คุณไม่สามารถลดสิทธิ์ตัวเองเป็น Staff ได้'}), 400
+        user.role = new_role
     
     # 2. ตรวจสอบการเปลี่ยน Username (แยกออกมา)
     new_username = data.get('username')

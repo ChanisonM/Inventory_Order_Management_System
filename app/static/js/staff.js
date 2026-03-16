@@ -3,58 +3,6 @@ let currentPage = 1;    // หน้าปัจจุบัน
 const rowsPerPage = 5; // จำนวนรายชื่อต่อหน้า
 
 
-// async function loadStaffs() {
-//     try {
-//         const response = await fetch('api/get_staffs');
-//         const data = await response.json();
-//         // const tableBody = document.getElementById('staff-table-body');
-        
-//         allStaff = data.staffs
-
-//         displayTable(1)
-
-//         tableBody.innerHTML = '';
-
-//         if (data.staffs.length === 0) {
-//             tableBody.innerHTML = `<tr><td colspan="3" class="px-6 py-10 text-center text-gray-400">No staff members found.</td></tr>`;
-//             return;
-//         }
-
-// data.staffs.forEach(s => {
-//             // --- เช็กเงื่อนไขสีของ ROLE ---
-//             // ถ้าเป็น admin ใช้สีม่วง (bg-purple-100 text-purple-700)
-//             // ถ้าเป็น staff ใช้สีน้ำเงินเดิม (bg-blue-100 text-blue-700)
-//             const roleClass = s.role === 'admin' 
-//                 ? 'bg-purple-100 text-purple-700 border border-purple-200' 
-//                 : 'bg-blue-100 text-blue-700';
-
-//             tableBody.innerHTML += `
-//                 <tr class="hover:bg-gray-50/80 transition-colors border-b border-gray-100">
-//                     <td class="px-6 py-4 font-medium text-gray-800">
-//                         ${s.username} 
-//                         ${s.role === 'admin' ? '<i class="fa-solid fa-crown text-amber-500 ml-1 text-xs"></i>' : ''}
-//                     </td>
-//                     <td class="px-6 py-4">
-//                         <span class="px-3 py-1 ${roleClass} rounded-full text-[11px] font-bold uppercase tracking-wider">
-//                             ${s.role}
-//                         </span>
-//                     </td>
-//                     <td class="px-6 py-4 text-center">
-//                         <button onclick="editStaff(${s.id}, '${s.username}')" class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all active:scale-90">
-//                             <i class="fa-solid fa-user-pen"></i>
-//                         </button>
-//                         <button onclick="deleteStaff(${s.id} , '${s.username}')" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all active:scale-90">
-//                             <i class="fa-solid fa-trash-can"></i>
-//                         </button>
-//                     </td>
-//                 </tr>
-//             `;
-//         });    
-//     } catch (error) {
-//         console.error('Error:', error);
-//     }
-// }
-
 async function loadStaffs() {
     try {
         const response = await fetch('api/get_staffs');
@@ -170,7 +118,7 @@ function displayTable(page) {
                         <i class="fa-solid fa-user-pen"></i>
                     </button>
 
-                    <button onclick="deleteStaff(${s.id} , '${s.username}')" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all active:scale-90">
+                    <button onclick="deleteStaff(${s.id} , '${s.username} , ${s.role}')" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all active:scale-90">
                         <i class="fa-solid fa-trash-can"></i>
                     </button>
                     
@@ -213,7 +161,7 @@ function renderPagination() {
 }
 
 
-async function editStaff(id , currentUsername) {
+async function editStaff(id , currentUsername , currentRole) {
     const { value : formValues} = await Swal.fire({
         title: 'แก้ไขข้อมูลพนักงาน',
         html:
@@ -224,15 +172,21 @@ async function editStaff(id , currentUsername) {
             `<div>`+
             `<label class="text-left block mb-2 mt-4 text-sm text-gray-600">รหัสผ่านใหม่ (ปล่อยว่างถ้าไม่เปลี่ยน)</label>` +
             `<input id="swal-input2" type="password" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition" placeholder="New Password">`+
-            `</div>`,
+            `</div>`+
+            `<label class="text-left block text-sm font-medium text-gray-700 mb-1">Role (ตำแหน่ง)</label>` +
+            `<select id="swal-input-role" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none transition mb-4">` +
+                `<option value="staff" ${currentRole === 'staff' ? 'selected' : ''}>Staff</option>` +
+                `<option value="admin" ${currentRole === 'admin' ? 'selected' : ''}>Admin</option>` +
+            `</select>` ,
         focusConfirm: false,
         showCancelButton: true,
         confirmButtonText: 'บันทึก',
-        cancelButtonText: 'ยกเลิก',
+        cancelButtonText: 'ยกเลิก',  
         preConfirm: () => {
             return {
                 username : document.getElementById('swal-input1').value,
                 password : document.getElementById('swal-input2').value,
+                role : document.getElementById('swal-input-role').value,
             }
         }    
     })
