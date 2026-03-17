@@ -73,9 +73,23 @@ def add_product():
 
 @api.route('/products', methods=['GET'])    
 def get_products():
-    products = Product.query.all()
+    # แก้จาก Product.query.all() เป็นการกรองเฉพาะ is_deleted=False
+    products = Product.query.filter_by(is_deleted=False).all()
     schema = ProductSchema(many=True)
-    return jsonify({'products': schema.dump(products)}), 200
+
+    product_list = []
+    for p in products:
+        product_list.append({
+            'id': p.id,
+            'sku': p.sku,
+            'name': p.name,
+            'price': p.price,
+            'stock_quantity': p.stock_quantity,
+            'created_by': p.created_by.username if p.created_by else 'System',
+            'created_at': p.created_at.strftime('%d/%m/%Y %H:%M') if p.created_at else '-'
+        })
+        # ส่ง product_list ที่เราจัด format เองกลับไป
+    return jsonify({'products': product_list}), 200
 
 
 @api.route('/add_product' , methods=['POST'])
@@ -91,7 +105,8 @@ def add_product_from_modal():
             stock_quantity = data['stock_quantity'],
             price = data['price'],
             sku = unique_sku ,
-            category_id=data.get('category_id', 1) # สมมติว่ามีหมวดหมู่ที่ 1 อยู่แล้ว
+            category_id=data.get('category_id', 1), # สมมติว่ามีหมวดหมู่ที่ 1 อยู่แล้ว
+            created_by_id=current_user.id
         )
         db.session.add(new_product)
         db.session.commit()
@@ -168,7 +183,7 @@ def register():
 @api.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
-    user = User.query.filter_by(username=data['username']).first()
+    user = User.query.filter_by(username=data['username'], is_active=True).first()
     # ตรวจสอบชื่อผู้ใช้ และเช็ครหัสผ่านที่ Hash ไว้
     if user and user.check_password(data['password']):
         login_user(user) # สร้าง Session ให้ User
@@ -198,8 +213,74 @@ def logout():
 @api.route('/dashboard')
 @login_required
 def dashboard():
-    response = make_response(render_template('dashboard.html', user=current_user))
+
+    # dashboard เดิม
+    # response = make_response(render_template('dashboard.html', user=current_user))
+    # # สั่ง Browser ว่าห้ามเก็บ Cache หน้านี้เด็ดขาด
+    # response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    # response.headers['Pragma'] = 'no-cache'
+    # response.headers['Expires'] = '0'
+    # return response
+
+    
+    # 1. นับจำนวนสินค้าทั้งหมด
+    total_products = Product.query.count()
+    # 2. นับสินค้าที่สต็อกต่ำกว่า 5 (ตัวอย่าง)
+    low_stock_count = Product.query.filter(Product.stock_quantity < 5).count()
+    # 3. นับจำนวนพนักงาน
+    total_staff = User.query.count()
+    # 4. (แถม) ดึงสินค้า 5 รายการล่าสุดมาโชว์
+    recent_products  = Product.query.order_by(Product.id.desc()).limit(5).all()
+    response = make_response(render_template(
+        'dashboard.html',
+        user = current_user,
+        total_products = total_products ,
+        low_stock_count = low_stock_count,
+        total_staff = total_staff ,
+        recent_products = recent_products ,
+
+    ))
+    # ป้องกัน Cache เหมือนเดิม
+    response.headers['Cache-Control'] = 'no-cache , no-store , must-revalidate'
+    return response
+
+@api.route('/inventory')
+@login_required
+def inventory():
+    # เพิ่มการกรอง .filter_by(is_deleted=False) เข้าไปด้วย
+    products = Product.query.filter_by(is_deleted=False).all()
+    response = make_response(render_template('inventory.html', user=current_user , products=products))
     # สั่ง Browser ว่าห้ามเก็บ Cache หน้านี้เด็ดขาด
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    return response
+
+@api.route('/low_inventory')
+@login_required
+def low_inventory():
+    # 1. รับค่า filter จาก URL (ถ้าไม่มีให้เป็น None)
+    filter_type = request.args.get('filter')
+    
+    # 2. เริ่มต้น Query ข้อมูลสินค้า
+    query = Product.query.filter_by(is_deleted=False)
+    
+    # 3. เช็คเงื่อนไข: ถ้าส่ง filter=low_stock มา ให้กรองเฉพาะของที่สต็อกน้อยกว่า 5
+    if filter_type == 'low_stock':
+        query = query.filter(Product.stock_quantity < 5)
+    
+    # 4. ดึงข้อมูลออกมา (อาจจะเรียงตามสต็อกน้อยไปมาก เพื่อให้ตัวที่ต้องเติมขึ้นก่อน)
+    products = query.order_by(Product.stock_quantity.asc()).all()
+
+    # 5. ส่งข้อมูล products และ filter_type กลับไปที่หน้าบ้าน (Template)
+    response = make_response(render_template(
+        'low_inventory.html', 
+        user=current_user, 
+        products=products, 
+        filter_type=filter_type
+    ))
+    
+    # สั่ง Browser ว่าห้ามเก็บ Cache (โค้ดส่วนเดิมของนาย)
     response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
     response.headers['Pragma'] = 'no-cache'
     response.headers['Expires'] = '0'
@@ -242,7 +323,7 @@ def get_staff():
         return jsonify({'message': 'Unauthorized'}), 403
     # ดึงทุกคนยกเว้นตัวเราเอง
     # staffs = User.query.filter(User.id != current_user.id).all()
-    staffs = User.query.order_by(User.role.asc() , User.username.asc()).all()
+    staffs = User.query.filter_by(is_active=True).order_by(User.role.asc()).all()
     staff_list = []
     for s in staffs :
         staff_list.append({
@@ -300,9 +381,45 @@ def delete_staff(user_id):
         return jsonify({'message': 'คุณไม่สามารถลบบัญชีของตัวเองได้'}), 400
     user = User.query.get_or_404(user_id)
     try :
-        db.session.delete(user)
+        # db.session.delete(user)
+        user.is_active = False
         db.session.commit()
-        return jsonify({'message': f'ลบพนักงาน {user.username} เรียบร้อยแล้ว'}), 200
+        return jsonify({'message': f'ระงับการใช้งานพนักงาน {user.username} เรียบร้อยแล้ว'}), 200
     except Exception as e:
         db.session.rollback()
-        return jsonify({'message': 'เกิดข้อผิดพลาดในการลบข้อมูล', 'error': str(e)}), 500
+        return jsonify({'message': 'เกิดข้อผิดพลาดในระงับการใช้งานพนักงาน', 'error': str(e)}), 500
+    
+# --- API สำหรับแก้ไขสินค้า ---
+@api.route('/api/update_product/<int:product_id>', methods=['PUT'])
+@login_required
+def update_product(product_id):
+    product = Product.query.get_or_404(product_id)
+    data = request.get_json()
+    
+    try:
+        product.name = data.get('name', product.name)
+        product.stock_quantity = data.get('stock_quantity', product.stock_quantity)
+        product.price = data.get('price', product.price)
+        # ถ้ามีหมวดหมู่เพิ่ม สามารถแก้ category_id ตรงนี้ได้
+        
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'อัปเดตสินค้าสำเร็จ'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+# --- API สำหรับลบสินค้า (Soft Delete) ---
+@api.route('/api/delete_product/<int:product_id>', methods=['DELETE'])
+@login_required
+def delete_product(product_id):
+    if current_user.role != 'admin': # <--- เช็คสิทธิ์
+        return jsonify({'success': False, 'message': 'สิทธิ์ไม่เพียงพอ'}), 403
+    product = Product.query.get_or_404(product_id)
+    try:
+        # สมมติว่าใน Model Product มีคอลัมน์ is_deleted แล้ว
+        product.is_deleted = True 
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'ลบสินค้าเรียบร้อยแล้ว'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
