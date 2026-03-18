@@ -213,20 +213,17 @@ def logout():
 @api.route('/dashboard')
 @login_required
 def dashboard():
-
-    # dashboard เดิม
-    # response = make_response(render_template('dashboard.html', user=current_user))
-    # # สั่ง Browser ว่าห้ามเก็บ Cache หน้านี้เด็ดขาด
-    # response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-    # response.headers['Pragma'] = 'no-cache'
-    # response.headers['Expires'] = '0'
-    # return response
-
-    
-    # 1. นับจำนวนสินค้าทั้งหมด
-    total_products = Product.query.count()
+    # นับจำนวนสินค้าทั้งหมด
+    # total_products = Product.query.count()
+    # 1. นับเฉพาะสินค้าที่ยังไม่ถูกลบ (is_deleted=False)
+    total_products = Product.query.filter_by(is_deleted=False).count()
     # 2. นับสินค้าที่สต็อกต่ำกว่า 5 (ตัวอย่าง)
-    low_stock_count = Product.query.filter(Product.stock_quantity < 5).count()
+    # 2. นับสินค้าที่สต็อกต่ำ (ควรกรอง is_deleted ด้วยเช่นกัน)
+    low_stock_count = Product.query.filter(
+        Product.is_deleted == False, 
+        Product.stock_quantity < 5
+    ).count()
+    # low_stock_count = Product.query.filter(Product.stock_quantity < 5).count()
     # 3. นับจำนวนพนักงาน
     total_staff = User.query.count()
     # 4. (แถม) ดึงสินค้า 5 รายการล่าสุดมาโชว์
@@ -247,7 +244,7 @@ def dashboard():
 @api.route('/inventory')
 @login_required
 def inventory():
-    # เพิ่มการกรอง .filter_by(is_deleted=False) เข้าไปด้วย
+    # เพิ่มการกรอง .filter_by(is_deleted=False) เ1ข้าไปด้วย
     products = Product.query.filter_by(is_deleted=False).all()
     response = make_response(render_template('inventory.html', user=current_user , products=products))
     # สั่ง Browser ว่าห้ามเก็บ Cache หน้านี้เด็ดขาด
@@ -259,33 +256,32 @@ def inventory():
 @api.route('/low_inventory')
 @login_required
 def low_inventory():
-    # 1. รับค่า filter จาก URL (ถ้าไม่มีให้เป็น None)
     filter_type = request.args.get('filter')
-    
-    # 2. เริ่มต้น Query ข้อมูลสินค้า
     query = Product.query.filter_by(is_deleted=False)
     
-    # 3. เช็คเงื่อนไข: ถ้าส่ง filter=low_stock มา ให้กรองเฉพาะของที่สต็อกน้อยกว่า 5
     if filter_type == 'low_stock':
         query = query.filter(Product.stock_quantity < 5)
     
-    # 4. ดึงข้อมูลออกมา (อาจจะเรียงตามสต็อกน้อยไปมาก เพื่อให้ตัวที่ต้องเติมขึ้นก่อน)
     products = query.order_by(Product.stock_quantity.asc()).all()
 
-    # 5. ส่งข้อมูล products และ filter_type กลับไปที่หน้าบ้าน (Template)
-    response = make_response(render_template(
+    # แปลงข้อมูลเป็น List ของ Dict เพื่อให้ JS ใช้งานได้
+    products_json = []
+    for p in products:
+        products_json.append({
+            'id': p.id,
+            'name': p.name,
+            'price': float(p.price),
+            'stock_quantity': p.stock_quantity,
+            'category_id': p.category_id
+        })
+
+    return render_template(
         'low_inventory.html', 
         user=current_user, 
-        products=products, 
+        products=products, # ยังส่งแบบเดิมเผื่อไว้
+        products_json=products_json, # ✅ ส่งแบบ JSON ไปให้ JS
         filter_type=filter_type
-    ))
-    
-    # สั่ง Browser ว่าห้ามเก็บ Cache (โค้ดส่วนเดิมของนาย)
-    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-    response.headers['Pragma'] = 'no-cache'
-    response.headers['Expires'] = '0'
-    return response
-
+    )
 
 @api.route('/add_staff' , methods=["POST"])
 @login_required
@@ -390,23 +386,36 @@ def delete_staff(user_id):
         return jsonify({'message': 'เกิดข้อผิดพลาดในระงับการใช้งานพนักงาน', 'error': str(e)}), 500
     
 # --- API สำหรับแก้ไขสินค้า ---
-@api.route('/api/update_product/<int:product_id>', methods=['PUT'])
+# @api.route('api/update_product/<int:product_id>', methods=['PUT'])
+# @login_required
+# def update_product(product_id):
+#     product = Product.query.get_or_404(product_id)
+#     data = request.get_json()
+    
+#     try:
+#         product.name = data.get('name', product.name)
+#         product.stock_quantity = data.get('stock_quantity', product.stock_quantity)
+#         product.price = data.get('price', product.price)
+#         # ถ้ามีหมวดหมู่เพิ่ม สามารถแก้ category_id ตรงนี้ได้
+        
+#         db.session.commit()
+#         return jsonify({'success': True, 'message': 'อัปเดตสินค้าสำเร็จ'})
+#     except Exception as e:
+#         db.session.rollback()
+#         return jsonify({'success': False, 'message': str(e)}), 500
+
+@api.route('/update_product/<int:id>', methods=['PUT'])
 @login_required
-def update_product(product_id):
-    product = Product.query.get_or_404(product_id)
+def update_product(id):
+    product = Product.query.get_or_404(id)
     data = request.get_json()
     
-    try:
-        product.name = data.get('name', product.name)
-        product.stock_quantity = data.get('stock_quantity', product.stock_quantity)
-        product.price = data.get('price', product.price)
-        # ถ้ามีหมวดหมู่เพิ่ม สามารถแก้ category_id ตรงนี้ได้
-        
-        db.session.commit()
-        return jsonify({'success': True, 'message': 'อัปเดตสินค้าสำเร็จ'})
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'success': False, 'message': str(e)}), 500
+    product.name = data.get('name', product.name)
+    product.price = data.get('price', product.price)
+    product.stock_quantity = data.get('stock_quantity', product.stock_quantity)
+    
+    db.session.commit()
+    return jsonify({"message": "Product updated successfully"})
 
 # --- API สำหรับลบสินค้า (Soft Delete) ---
 @api.route('/api/delete_product/<int:product_id>', methods=['DELETE'])

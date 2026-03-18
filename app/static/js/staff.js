@@ -114,11 +114,11 @@ function displayTable(page) {
                     </span>
                 </td>
                 <td class="px-6 py-4 text-center">
-                    <button onclick="editStaff(${s.id}, '${s.username}')" class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all active:scale-90">
+                    <button onclick="editStaff(${s.id}, '${s.username}' , '${s.role}')" class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all active:scale-90">
                         <i class="fa-solid fa-user-pen"></i>
                     </button>
 
-                    <button onclick="deleteStaff(${s.id} , '${s.username} , ${s.role}')" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all active:scale-90">
+                    <button onclick="deleteStaff(${s.id} , '${s.username}')" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all active:scale-90">
                         <i class="fa-solid fa-trash-can"></i>
                     </button>
                     
@@ -216,7 +216,7 @@ async function editStaff(id , currentUsername , currentRole) {
 async function deleteStaff(id, username) {
     const result = await Swal.fire({
         title: 'ยืนยันการลบ?',
-        text: `คุณต้องการลบพนักงาน "${username}" ออกจากระบบใช่หรือไม่?`,
+        text: `คุณต้องการระงับการใช้งานพนักงาน "${username}" ใช่หรือไม่? พนักงานจะไม่สามารถเข้าสู่ระบบได้`,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#d33',
